@@ -1,1 +1,3 @@
-console.log('hallo aus main js');
+const test = 'test';
+
+console.log(test);
