@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ossicom/gulp-project.git"
+    "url": "git@github.com:ossicom/gulp-project.git"
   },
   "keywords": [
     "gulp"
