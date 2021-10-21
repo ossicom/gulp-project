@@ -22,6 +22,11 @@ const htmlmin = require('gulp-htmlmin');
 // JavaScript / TypeScript
 const buffer = require('vinyl-buffer');
 const { createGulpEsbuild } = require('gulp-esbuild');
+const jshint = require('gulp-jshint');
+const concat = require('gulp-concat');
+const babel = require('gulp-babel');
+const browserify = require('gulp-browserify');
+const uglify = require('gulp-uglify');
 
 // Define important variables
 const src = './src';
@@ -101,18 +106,58 @@ const html = () => {
     .pipe(gulp.dest(`${dest}`));
 };
 
+// Compile js to minify js
+const script = () => {
+  return (
+    gulp
+      .src(`${src}/js/**/*.js`)
+      //init plumper
+      .pipe(
+        plumber((error) => {
+          gutil.log(error.message);
+        })
+      )
+      //start use sourcemaps
+      .pipe(sourcemaps.init())
+      // Concat js alle js dateien zusammenführen
+      .pipe(concat('concat.js'))
+      // Babel mit einbeziehen für ES6 Javascripte
+      .pipe(babel())
+      // JS linter
+      .pipe(jshint())
+      //report of jshint
+      .pipe(jshint.reporter('jshint-stylish'))
+      // Add browser support
+      .pipe(
+        browserify({
+          insertGlobals: true,
+        })
+      )
+      // minify js
+      .pipe(uglify())
+      //add suffix aendere den main.js in min.js
+      .pipe(rename({ basename: 'main', suffix: '.min' }))
+      // Write sourcemaps
+      .pipe(sourcemaps.write(''))
+      //destination folder
+      .pipe(gulp.dest(`${dest}/js`))
+      // update Browser
+      .pipe(browserSync.stream())
+  );
+};
+
 //function to watch our changes and refraesh page
 const watch = () =>
   gulp.watch(
     [`${src}/sass/**/*.sass`, `${src}/*.html`, `${src}/js/**/*.js`],
-    gulp.series(html, css, reload)
+    gulp.series(script, html, css, reload)
   );
 
 // all tastks for this project
-const dev = gulp.series(html, css, serve, watch);
+const dev = gulp.series(script, html, css, serve, watch);
 
 // Just build the Project
-const build = gulp.series(html, css);
+const build = gulp.series(script, html, css);
 
 // Default function
 exports.dev = dev;
